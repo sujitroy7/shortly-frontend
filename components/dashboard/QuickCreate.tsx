@@ -1,10 +1,11 @@
 "use client"
 
-import * as React from "react"
-import { Link, QrCode } from "lucide-react"
+import { Link,  } from "lucide-react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { post } from "@/lib/api"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -52,13 +53,29 @@ export function QuickCreate() {
   })
 
   const slugType = watch("slugType")
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  const onSubmit = (data: FormValues) => {
-    console.log("Form Data:", {
-      destination: data.destination,
-      slugType: data.slugType,
-      customSlug: data.slugType === "custom" ? data.customSlug : undefined,
-    })
+  const onSubmit = async (data: FormValues) => {
+    console.log(data, 'test-log data')
+    setSubmitError(null)
+    setSuccessMessage(null)
+    try {
+      const payload = {
+        destination_url: data.destination,
+        slug: data.slugType === "custom" ? data.customSlug : undefined,
+      }
+      
+      await post('/shorten', payload)
+      
+      setSuccessMessage("Short link created successfully!")
+      // Optional: Reset form or redirect
+    } catch (error: any) {
+      console.error("Failed to create short link:", error)
+      const debugUrl = error.config?.baseURL + error.config?.url;
+      const errorMessage = error.message || "Failed to create short link. Please try again."
+      setSubmitError(`${errorMessage} (Attempted: ${debugUrl})`)
+    }
   }
 
   return (
@@ -84,6 +101,16 @@ export function QuickCreate() {
         </div>
       </CardHeader>
       <CardContent className="space-y-8">
+        {submitError && (
+          <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+            {submitError}
+          </div>
+        )}
+        {successMessage && (
+          <div className="p-3 bg-green-50 border border-green-200 text-green-600 rounded-md text-sm">
+            {successMessage}
+          </div>
+        )}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg border border-border/50">
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
