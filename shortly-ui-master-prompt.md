@@ -12,7 +12,7 @@ This prompt provides all the rules, theme, colors, responsiveness requirements, 
 
 **Project Name:** Shortly  
 **Type:** URL Shortener + Basic Link Analytics  
-**Frontend Stack:** Next.js + TypeScript + Tailwind CSS + shadcn/ui
+**Frontend Stack:** Next.js + TypeScript + Tailwind CSS + shadcn/ui + pnpm (Package Manager)
 
 Shortly should feel:
 
