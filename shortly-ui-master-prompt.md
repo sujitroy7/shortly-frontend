@@ -30,23 +30,23 @@ Always use the following theme:
 
 ### **Primary Color**
 
-- Indigo 600 → `#4F46E5`
+- Blazing Flame → `#F15025`
 
 ### **Primary Gradient**
 
-- From `#4F46E5` (Indigo 600)
-- To `#7C3AED` (Purple 600)
+- From `#F15025` (Blazing Flame)
+- To `#D1360E` (Burnt Orange)
 
 ### **Neutral Backgrounds**
 
-- `#FFFFFF`
-- `#F8F9FA`
-- Tailwind `zinc-50`
+- `#FFFFFF` (White)
+- `#E6E8E6` (Alabaster Grey)
+- `#CED0CE` (Dust Grey)
 
 ### **Text Colors**
 
-- Primary text → `zinc-800`
-- Secondary text → `zinc-500`
+- Primary text → `#191919` (Carbon Black)
+- Secondary text → `zinc-600`
 
 ### **Status Colors**
 
@@ -62,7 +62,7 @@ Follow these rules across all generated UI:
 
 ### **Typography**
 
-- Headings: semi-bold, clean
+- Headings: bold, clean
 - Text: regular weight
 - No decorative fonts
 - Good spacing between sections
@@ -92,16 +92,16 @@ Keep spacing consistent:
 
 ## 4. Core Components (Use Consistently)
 
-**Note:** Use `shadcn/ui` components as the base for all UI elements. Customize them to match the Shortly theme (Indigo 600).
+**Note:** Use `shadcn/ui` components as the base for all UI elements. Customize them to match the Shortly theme (Blazing Flame).
 
 ### **Buttons**
 
-- Primary Button: indigo background, white text
+- Primary Button: Blazing Flame background, white text
 - Secondary Button: grey outline, dark text
 
 ### **Cards**
 
-- White background
+- White or Alabaster Grey background
 - Soft shadow
 - Rounded large corners
 - Used for dashboards, analytics, lists
