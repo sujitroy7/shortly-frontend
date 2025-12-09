@@ -1,9 +1,12 @@
 import { QuickCreate } from "@/components/dashboard/QuickCreate"
 
 export default function DashboardPage() {
+  const userFirstName = "Sujit" 
+  
   return (
-    <div className="flex min-h-[80vh] flex-col items-center justify-center p-4">
-      <QuickCreate />
+    <div className="container">
+      <h1 className="mb-5 text-3xl font-bold tracking-tight">Welcome back {userFirstName}!</h1>
+        <QuickCreate />
     </div>
   )
 }

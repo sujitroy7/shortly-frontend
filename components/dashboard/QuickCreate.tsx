@@ -2,6 +2,9 @@
 
 import * as React from "react"
 import { Link, QrCode } from "lucide-react"
+import { z } from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -15,18 +18,56 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Checkbox } from "@/components/ui/checkbox"
 
 export function QuickCreate() {
-  const [slugType, setSlugType] = React.useState<"random" | "custom">("random")
+  const formSchema = z.object({
+    destination: z.string().url({ message: "Please enter a valid URL (e.g., https://example.com)" }),
+    slugType: z.enum(["random", "custom"]),
+    customSlug: z.string().optional(),
+  }).refine((data) => {
+    if (data.slugType === "custom") {
+      return !!data.customSlug && data.customSlug.length >= 3
+    }
+    return true
+  }, {
+    message: "Custom alias must be at least 3 characters",
+    path: ["customSlug"],
+  })
+
+  type FormValues = z.infer<typeof formSchema>
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      slugType: "random",
+      destination: "",
+      customSlug: "",
+    },
+  })
+
+  const slugType = watch("slugType")
+
+  const onSubmit = (data: FormValues) => {
+    console.log("Form Data:", {
+      destination: data.destination,
+      slugType: data.slugType,
+      customSlug: data.slugType === "custom" ? data.customSlug : undefined,
+    })
+  }
 
   return (
-    <Card className="w-full max-w-2xl shadow-md">
+    <Card className="w-full shadow-sm border-none">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-2xl font-bold">Quick create</CardTitle>
-            <CardDescription className="mt-2 text-base">
+            <CardTitle className="text-3xl font-bold tracking-tight">Quick create</CardTitle>
+            <CardDescription className="mt-2 text-lg text-muted-foreground">
               You can create <span className="font-semibold text-foreground">3</span> more short links this month.
             </CardDescription>
           </div>
@@ -42,68 +83,108 @@ export function QuickCreate() {
           </div> */}
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <span className="text-muted-foreground">Domain:</span>
-          <span className="flex items-center gap-1 font-semibold text-foreground">
-            short.ly
-            <span className="text-xs text-muted-foreground">🔒</span>
-          </span>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="destination" className="text-base font-semibold">
-            Enter your destination URL
-          </Label>
-          <Input
-            id="destination"
-            placeholder="https://example.com/my-long-url"
-            className="h-12 text-base"
-          />
-        </div>
-
-        <div className="space-y-3">
-          <Label className="text-base font-semibold">Short Link Type</Label>
-          <RadioGroup
-            defaultValue="random"
-            value={slugType}
-            onValueChange={(value: string) => setSlugType(value as "random" | "custom")}
-            className="flex flex-col space-y-1"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="random" id="random" />
-              <Label htmlFor="random" className="font-normal">Random alias</Label>
+      <CardContent className="space-y-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg border border-border/50">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <Link className="h-5 w-5" />
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="custom" id="custom" />
-              <Label htmlFor="custom" className="font-normal">Custom alias</Label>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-muted-foreground">Domain</span>
+              <span className="flex items-center gap-1.5 font-bold text-foreground text-lg">
+                short.ly
+                <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-[3px] text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                  Secure
+                </span>
+              </span>
             </div>
-          </RadioGroup>
-        </div>
+          </div>
 
-        {slugType === "custom" && (
-           <div className="flex items-center gap-2">
-             <div className="flex h-12 items-center rounded-md border border-input bg-muted px-3 text-muted-foreground">
-               short.ly/
-             </div>
-             <Input
-               placeholder="my-custom-link"
-               className="h-12 flex-1 text-base"
-             />
-           </div>
-        )}
+          <div className="space-y-4">
+            <Label htmlFor="destination" className="text-lg font-semibold text-foreground mb-1 block">
+              Destination URL
+            </Label>
+            <div className="relative">
+              <Input
+                id="destination"
+                placeholder="https://example.com/my-super-long-link-that-needs-shortening"
+                className={`h-14 px-4 text-lg md:text-lg font-normal shadow-sm border-muted-foreground/20 focus-visible:ring-primary/20 focus-visible:border-primary transition-all ${errors.destination ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                {...register("destination")}
+              />
+              {errors.destination && (
+                <p className="text-sm text-red-500 mt-2">{errors.destination.message}</p>
+              )}
+            </div>
+          </div>
 
-        {/* <div className="flex items-center space-x-2">
-          <Checkbox id="qr-code" />
-          <Label htmlFor="qr-code" className="font-normal">
-            Also create a QR code for this link
-          </Label>
-        </div> */}
+          <div className="space-y-4">
+            <Label className="text-lg font-semibold text-foreground mb-1 block">Short Link Type</Label>
+            <RadioGroup
+              value={slugType}
+              onValueChange={(value) => setValue("slugType", value as "random" | "custom", { shouldValidate: true })}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+            >
+              <label
+                htmlFor="option-random"
+                className={`flex items-start space-x-3 rounded-xl border p-4 transition-all hover:bg-muted/50 cursor-pointer ${slugType === 'random' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border'}`}
+              >
+                <RadioGroupItem value="random" id="option-random" className="mt-1" />
+                <div className="space-y-1">
+                  <div className="font-semibold text-sm leading-none">Random alias</div>
+                  <p className="text-sm text-muted-foreground">Auto-generated random characters</p>
+                </div>
+              </label>
+              <label
+                htmlFor="option-custom"
+                className={`flex items-start space-x-3 rounded-xl border p-4 transition-all hover:bg-muted/50 cursor-pointer ${slugType === 'custom' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border'}`}
+              >
+                <RadioGroupItem value="custom" id="option-custom" className="mt-1" />
+                <div className="space-y-1">
+                  <div className="font-semibold text-sm leading-none">Custom alias</div>
+                  <p className="text-sm text-muted-foreground">Choose your own custom slug</p>
+                </div>
+              </label>
+            </RadioGroup>
+          </div>
+
+          {slugType === "custom" && (
+            <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+              <Label htmlFor="custom-slug" className="text-lg font-semibold text-foreground mb-1 block">
+                Your custom alias
+              </Label>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-14 items-center rounded-md border border-input bg-muted/50 px-4 text-muted-foreground font-normal text-lg min-w-fit">
+                    short.ly/
+                  </div>
+                  <Input
+                    id="custom-slug"
+                    placeholder="summer-sale-2025"
+                    className={`h-14 flex-1 text-lg md:text-lg font-normal border-muted-foreground/20 focus-visible:ring-primary/20 focus-visible:border-primary transition-all shadow-sm ${errors.customSlug ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                    {...register("customSlug")}
+                  />
+                </div>
+                {errors.customSlug && (
+                  <p className="text-sm text-red-500">{errors.customSlug.message}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* <div className="flex items-center space-x-2">
+            <Checkbox id="qr-code" />
+            <Label htmlFor="qr-code" className="font-normal">
+              Also create a QR code for this link
+            </Label>
+          </div> */}
+
+          <Button type="submit" className="h-14 w-full text-lg font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all rounded-xl" size="lg">
+            Create Short Link
+            <Link className="ml-2 h-5 w-5" />
+          </Button>
+        </form>
       </CardContent>
       <CardFooter>
-        <Button className="h-12 w-full text-base font-semibold sm:w-auto px-8" size="lg">
-          Create your Short link
-        </Button>
       </CardFooter>
     </Card>
   )
