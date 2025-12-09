@@ -1,11 +1,11 @@
 "use client"
 
-import { Link,  } from "lucide-react"
+import { Link, Check, X, Loader2 } from "lucide-react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { post } from "@/lib/api"
-import { useState } from "react"
+import { get, post } from "@/lib/api"
+import { useState, useEffect, useCallback, useRef } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -53,8 +53,73 @@ export function QuickCreate() {
   })
 
   const slugType = watch("slugType")
+  const customSlug = watch("customSlug")
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  
+  // Alias availability checking state
+  const [isCheckingAlias, setIsCheckingAlias] = useState(false)
+  const [isAliasAvailable, setIsAliasAvailable] = useState<boolean | null>(null)
+  const [aliasError, setAliasError] = useState<string | null>(null)
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Debounced alias availability check
+  const checkAliasAvailability = useCallback(async (slug: string) => {
+    if (!slug || slug.length < 3) {
+      setIsAliasAvailable(null)
+      setAliasError(null)
+      return
+    }
+
+    setIsCheckingAlias(true)
+    setAliasError(null)
+
+    try {
+      const response = await get<{ available: boolean }>(`/check/${slug}`)
+      setIsAliasAvailable(response.available)
+      if (!response.available) {
+        setAliasError("This alias is already taken")
+      }
+    } catch (error: any) {
+      console.error("Failed to check alias availability:", error)
+      setAliasError("Failed to check availability")
+      setIsAliasAvailable(null)
+    } finally {
+      setIsCheckingAlias(false)
+    }
+  }, [])
+
+  // Effect to trigger debounced alias check
+  useEffect(() => {
+    if (slugType !== "custom" || !customSlug) {
+      setIsAliasAvailable(null)
+      setAliasError(null)
+      return
+    }
+
+    // Clear previous timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+    }
+
+    // Reset state while typing
+    setIsAliasAvailable(null)
+    setAliasError(null)
+
+    // Set new debounced check (500ms delay)
+    debounceTimeoutRef.current = setTimeout(() => {
+      checkAliasAvailability(customSlug)
+    }, 500)
+
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+    }
+  }, [customSlug, slugType, checkAliasAvailability])
+
+  // Determine if form can be submitted
+  const canSubmit = slugType === "random" || (slugType === "custom" && isAliasAvailable === true)
 
   const onSubmit = async (data: FormValues) => {
     console.log(data, 'test-log data')
@@ -184,15 +249,41 @@ export function QuickCreate() {
                   <div className="flex h-14 items-center rounded-md border border-input bg-muted/50 px-4 text-muted-foreground font-normal text-lg min-w-fit">
                     short.ly/
                   </div>
-                  <Input
-                    id="custom-slug"
-                    placeholder="summer-sale-2025"
-                    className={`h-14 flex-1 text-lg md:text-lg font-normal border-muted-foreground/20 focus-visible:ring-primary/20 focus-visible:border-primary transition-all shadow-sm ${errors.customSlug ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                    {...register("customSlug")}
-                  />
+                  <div className="relative flex-1">
+                    <Input
+                      id="custom-slug"
+                      placeholder="summer-sale-2025"
+                      className={`h-14 w-full text-lg md:text-lg font-normal border-muted-foreground/20 focus-visible:ring-primary/20 focus-visible:border-primary transition-all shadow-sm pr-12 ${
+                        errors.customSlug || aliasError
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : isAliasAvailable === true
+                          ? "border-green-500 focus-visible:ring-green-500"
+                          : ""
+                      }`}
+                      {...register("customSlug")}
+                    />
+                    {/* Availability status indicator */}
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                      {isCheckingAlias && (
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      )}
+                      {!isCheckingAlias && isAliasAvailable === true && (
+                        <Check className="h-5 w-5 text-green-500" />
+                      )}
+                      {!isCheckingAlias && isAliasAvailable === false && (
+                        <X className="h-5 w-5 text-red-500" />
+                      )}
+                    </div>
+                  </div>
                 </div>
                 {errors.customSlug && (
                   <p className="text-sm text-red-500">{errors.customSlug.message}</p>
+                )}
+                {aliasError && !errors.customSlug && (
+                  <p className="text-sm text-red-500">{aliasError}</p>
+                )}
+                {isAliasAvailable === true && (
+                  <p className="text-sm text-green-500">This alias is available!</p>
                 )}
               </div>
             </div>
@@ -205,9 +296,23 @@ export function QuickCreate() {
             </Label>
           </div> */}
 
-          <Button type="submit" className="h-14 w-full text-lg font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all rounded-xl" size="lg">
-            Create Short Link
-            <Link className="ml-2 h-5 w-5" />
+          <Button 
+            type="submit" 
+            disabled={!canSubmit || isCheckingAlias}
+            className="h-14 w-full text-lg font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all rounded-xl disabled:opacity-50 disabled:cursor-not-allowed" 
+            size="lg"
+          >
+            {isCheckingAlias ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Checking availability...
+              </>
+            ) : (
+              <>
+                Create Short Link
+                <Link className="ml-2 h-5 w-5" />
+              </>
+            )}
           </Button>
         </form>
       </CardContent>
