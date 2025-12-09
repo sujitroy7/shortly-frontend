@@ -8,7 +8,11 @@ interface ApiErrorResponse {
 }
 
 // Environment variable for Base URL
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!BASE_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL is not defined");
+}
 
 // Create Axios instance with default configuration
 const api: AxiosInstance = axios.create({
