@@ -7,7 +7,7 @@ export function Hero() {
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground mb-6">
             Shorten Your Links, <br className="hidden sm:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-[#D1360E]">
               Expand Your Reach
             </span>
           </h1>
