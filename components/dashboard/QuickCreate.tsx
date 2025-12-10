@@ -1,6 +1,6 @@
 "use client"
 
-import { Link, Check, X, Loader2 } from "lucide-react"
+import { Link, Check, X, Loader2, Copy } from "lucide-react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -55,7 +55,10 @@ export function QuickCreate() {
   const slugType = watch("slugType")
   const customSlug = watch("customSlug")
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [generatedUrl, setGeneratedUrl] = useState<string | null>(null)
+  const [isCopied, setIsCopied] = useState(false)
+  const [isFadingOut, setIsFadingOut] = useState(false)
+  const [countdown, setCountdown] = useState<number>(15)
   
   // Alias availability checking state
   const [isCheckingAlias, setIsCheckingAlias] = useState(false)
@@ -118,28 +121,102 @@ export function QuickCreate() {
     }
   }, [customSlug, slugType, checkAliasAvailability])
 
+  // Auto-hide success section after 15 seconds with fade-out animation
+  useEffect(() => {
+    if (generatedUrl) {
+      // Reset countdown when a new URL is generated
+      setCountdown(15)
+      setIsFadingOut(false)
+      
+      // Start fade-out animation after 14.5 seconds
+      const fadeTimer = setTimeout(() => {
+        setIsFadingOut(true)
+      }, 14500)
+
+      // Clear the URL after fade-out animation completes (15 seconds total)
+      const clearTimer = setTimeout(() => {
+        setGeneratedUrl(null)
+        setIsCopied(false)
+        setIsFadingOut(false)
+      }, 15000)
+
+      return () => {
+        clearTimeout(fadeTimer)
+        clearTimeout(clearTimer)
+      }
+    }
+  }, [generatedUrl])
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (generatedUrl && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(prev => prev - 1)
+      }, 1000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [generatedUrl, countdown])
+
   // Determine if form can be submitted
   const canSubmit = slugType === "random" || (slugType === "custom" && isAliasAvailable === true)
 
   const onSubmit = async (data: FormValues) => {
     console.log(data, 'test-log data')
     setSubmitError(null)
-    setSuccessMessage(null)
+    setGeneratedUrl(null)
+    setIsCopied(false)
+    setIsFadingOut(false)
     try {
       const payload = {
         destination_url: data.destination,
         slug: data.slugType === "custom" ? data.customSlug : undefined,
       }
       
-      await post('/shorten', payload)
+      const response = await post<any>('/shorten', payload)
       
-      setSuccessMessage("Short link created successfully!")
+      console.log('API Response:', response)
+      
+      // Extract the short URL from the response
+      // The API returns data in format: { data: [{ short_url, slug, ... }] }
+      let shortUrl: string
+      const responseData = (response.data && Array.isArray(response.data) && response.data.length > 0) 
+        ? response.data[0] 
+        : (response.data || response);
+      
+      if (responseData && responseData.short_url) {
+        shortUrl = responseData.short_url
+      } else if (responseData && responseData.slug) {
+        shortUrl = `https://short.ly/${responseData.slug}`
+      } else if (response.short_url) {
+        shortUrl = response.short_url
+      } else if (response.slug) {
+        shortUrl = `https://short.ly/${response.slug}`
+      } else {
+        // Fallback: log the response to help debug
+        console.error('Unexpected API response structure:', response)
+        throw new Error('Unable to extract short URL from response')
+      }
+      
+      setGeneratedUrl(shortUrl)
       // Optional: Reset form or redirect
     } catch (error: any) {
       console.error("Failed to create short link:", error)
       const debugUrl = error.config?.baseURL + error.config?.url;
       const errorMessage = error.message || "Failed to create short link. Please try again."
       setSubmitError(`${errorMessage} (Attempted: ${debugUrl})`)
+    }
+  }
+
+  const copyToClipboard = async () => {
+    if (!generatedUrl) return
+    
+    try {
+      await navigator.clipboard.writeText(generatedUrl)
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000)
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error)
     }
   }
 
@@ -171,9 +248,50 @@ export function QuickCreate() {
             {submitError}
           </div>
         )}
-        {successMessage && (
-          <div className="p-3 bg-green-50 border border-green-200 text-green-600 rounded-md text-sm">
-            {successMessage}
+        {generatedUrl && (
+          <div className={`p-6 bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/20 rounded-xl space-y-3 transition-all duration-500 ${
+            isFadingOut 
+              ? 'animate-out fade-out slide-out-to-top-2 opacity-0 max-h-0 !p-0 !m-0 overflow-hidden' 
+              : 'animate-in fade-in slide-in-from-top-2'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Check className="h-5 w-5 text-green-600" />
+                <h3 className="text-lg font-semibold text-foreground">Your short link is ready!</h3>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <span>Disappears in</span>
+                <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary font-semibold text-xs">
+                  {countdown}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 p-3 bg-background rounded-lg border border-border">
+              <div className="flex-1 overflow-hidden">
+                <p className="text-sm text-muted-foreground mb-1">Short URL</p>
+                <a 
+                  href={generatedUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary font-semibold text-lg hover:underline truncate block"
+                >
+                  {generatedUrl}
+                </a>
+              </div>
+              <Button
+                type="button"
+                variant={isCopied ? "default" : "outline"}
+                size="icon"
+                onClick={copyToClipboard}
+                className="h-12 w-12 shrink-0 transition-all"
+              >
+                {isCopied ? (
+                  <Check className="h-5 w-5" />
+                ) : (
+                  <Copy className="h-5 w-5" />
+                )}
+              </Button>
+            </div>
           </div>
         )}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
