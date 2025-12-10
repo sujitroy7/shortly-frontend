@@ -1,30 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Shortly
+
+A URL shortening service built with a **Turborepo monorepo** architecture.
+
+## Project Structure
+
+```
+shortly-frontend/
+├── apps/
+│   ├── landing/          # Marketing site (Next.js) - port 3000
+│   └── dashboard/        # User dashboard (Next.js) - port 3001
+├── packages/
+│   ├── ui/               # Shared UI components (@shortly/ui)
+│   ├── lib/              # Shared utilities & API client (@shortly/lib)
+│   └── config/           # Shared Tailwind & TypeScript configs (@shortly/config)
+├── turbo.json            # Turborepo pipeline configuration
+└── pnpm-workspace.yaml   # pnpm workspace definition
+```
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- pnpm 9+
+
+### Installation
 
 ```bash
-pnpm dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Run all apps in parallel
+pnpm dev
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Run specific app
+pnpm dev --filter=@shortly/landing    # Landing page only
+pnpm dev --filter=@shortly/dashboard  # Dashboard only
+```
 
-## Learn More
+### Build
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Apps
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| App                  | Port | Description                                    |
+| -------------------- | ---- | ---------------------------------------------- |
+| `@shortly/landing`   | 3000 | Public marketing site with hero, features, CTA |
+| `@shortly/dashboard` | 3001 | Authenticated dashboard for managing URLs      |
 
-## Deploy on Vercel
+## Packages
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Package           | Description                                         |
+| ----------------- | --------------------------------------------------- |
+| `@shortly/ui`     | Shared React components (Button, Card, Input, etc.) |
+| `@shortly/lib`    | Shared utilities (API client, helper functions)     |
+| `@shortly/config` | Shared Tailwind CSS and TypeScript configurations   |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Environment Variables
+
+Create `.env.local` in each app:
+
+```bash
+# apps/landing/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_CLIENT_URL=http://localhost:3000
+
+# apps/dashboard/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_CLIENT_URL=http://localhost:3001
+```
+
+## Tech Stack
+
+- **Framework**: Next.js 16
+- **Build System**: Turborepo
+- **Package Manager**: pnpm
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui (Radix UI)
+- **Forms**: React Hook Form + Zod
+- **HTTP Client**: Axios
