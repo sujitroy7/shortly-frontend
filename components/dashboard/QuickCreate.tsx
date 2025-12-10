@@ -21,6 +21,8 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 export function QuickCreate() {
+  const baseUrl = process.env.NEXT_PUBLIC_CLIENT_URL
+  
   const formSchema = z.object({
     destination: z.string().url({ message: "Please enter a valid URL (e.g., https://example.com)" }),
     slugType: z.enum(["random", "custom"]),
@@ -187,11 +189,11 @@ export function QuickCreate() {
       if (responseData && responseData.short_url) {
         shortUrl = responseData.short_url
       } else if (responseData && responseData.slug) {
-        shortUrl = `https://short.ly/${responseData.slug}`
+        shortUrl = `${baseUrl}/${responseData.slug}`
       } else if (response.short_url) {
         shortUrl = response.short_url
       } else if (response.slug) {
-        shortUrl = `https://short.ly/${response.slug}`
+        shortUrl = `${baseUrl}/${response.slug}`
       } else {
         // Fallback: log the response to help debug
         console.error('Unexpected API response structure:', response)
@@ -302,7 +304,7 @@ export function QuickCreate() {
             <div className="flex flex-col">
               <span className="text-sm font-medium text-muted-foreground">Domain</span>
               <span className="flex items-center gap-1.5 font-bold text-foreground text-lg">
-                short.ly
+               {baseUrl}
                 <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-[3px] text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                   Secure
                 </span>
@@ -365,7 +367,7 @@ export function QuickCreate() {
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
                   <div className="flex h-14 items-center rounded-md border border-input bg-muted/50 px-4 text-muted-foreground font-normal text-lg min-w-fit">
-                    short.ly/
+                    {baseUrl}/
                   </div>
                   <div className="relative flex-1">
                     <Input

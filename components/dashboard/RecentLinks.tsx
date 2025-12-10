@@ -25,6 +25,7 @@ interface RecentLinksResponse {
 }
 
 export function RecentLinks() {
+  const baseUrl = process.env.NEXT_PUBLIC_CLIENT_URL
   const [links, setLinks] = useState<UrlData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -48,7 +49,7 @@ export function RecentLinks() {
   }, [])
 
   const copyToClipboard = async (slug: string, id: number) => {
-    const shortUrl = `https://short.ly/${slug}`
+    const shortUrl = `${baseUrl}/${slug}`
     try {
       await navigator.clipboard.writeText(shortUrl)
       setCopiedId(id)
@@ -185,12 +186,12 @@ export function RecentLinks() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <a 
-                      href={`https://short.ly/${link.slug}`}
+                      href={`${baseUrl}/${link.slug}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-semibold text-primary hover:underline truncate"
                     >
-                      short.ly/{link.slug}
+                      {baseUrl}/{link.slug}
                     </a>
                     <Button
                       variant="ghost"
