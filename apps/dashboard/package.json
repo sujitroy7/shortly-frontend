@@ -1,0 +1,36 @@
+{
+  "name": "@shortly/dashboard",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack --port 3001",
+    "build": "next build",
+    "start": "next start --port 3001",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@shortly/ui": "workspace:*",
+    "@shortly/lib": "workspace:*",
+    "@hookform/resolvers": "^5.2.2",
+    "next": "16.0.8",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "react-hook-form": "^7.68.0",
+    "lucide-react": "^0.556.0",
+    "date-fns": "^4.1.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@shortly/config": "workspace:*",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.8",
+    "tailwindcss": "^4",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5"
+  }
+}
