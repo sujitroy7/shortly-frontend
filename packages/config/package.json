@@ -6,5 +6,8 @@
     "./tailwind": "./tailwind.config.ts",
     "./typescript/base": "./tsconfig.base.json",
     "./typescript/nextjs": "./tsconfig.nextjs.json"
+  },
+  "dependencies": {
+    "tailwindcss-animate": "^1.0.7"
   }
 }

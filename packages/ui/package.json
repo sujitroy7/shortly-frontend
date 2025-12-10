@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@shortly/config": "workspace:*",
+    "@shortly/lib": "workspace:*",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "typescript": "^5"
@@ -29,6 +30,7 @@
     "@radix-ui/react-switch": "^1.2.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "lucide-react": "^0.556.0",
     "tailwind-merge": "^3.4.0"
   }
 }

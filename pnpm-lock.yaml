@@ -128,7 +128,11 @@ importers:
         specifier: ^5
         version: 5.9.3
 
-  packages/config: {}
+  packages/config:
+    dependencies:
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@4.1.17)
 
   packages/lib:
     dependencies:
@@ -172,6 +176,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      lucide-react:
+        specifier: ^0.556.0
+        version: 0.556.0(react@19.2.1)
       react:
         specifier: ^19
         version: 19.2.1
@@ -185,6 +192,9 @@ importers:
       '@shortly/config':
         specifier: workspace:*
         version: link:../config
+      '@shortly/lib':
+        specifier: workspace:*
+        version: link:../lib
       '@types/react':
         specifier: ^19
         version: 19.2.7
